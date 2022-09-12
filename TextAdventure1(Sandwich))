@@ -1,0 +1,112 @@
+class page{
+	constructor(text,choice,choiceText,choiceConst,effect){
+		this.text = text
+		this.choice = choice
+		this.choiceText = choiceText
+		this.choiceConst = choiceConst
+		this.effect = effect
+	}
+}
+texting = ''
+pageId = 0
+trigger = true
+writing = ''
+writeTimer = 0
+constants = [1]
+construct = ''
+choice = ''
+choices = []
+choiceTexts = ['1','2','3','4','5','6','7','8','9','10']
+inputting = false
+texts = [
+  new page('You walk to a cliff.',[1,4,3],['Jump off the cliff','Leave','Eat sandwich'],[[-1,-1],[-1,-1],[0,1]],[0,0]),
+  new page('You die falling off the cliff. The End.',[],[],[],[0,0]),
+  new page('You come across another cliff.',[1,4,3],['Jump off the cliff','Leave','Eat sandwich'],[[-1,-1],[-1,-1],[0,1]],[0,0]),
+  new page('The sandwich is tasty.',[1,2],['Jump off the cliff','Leave'],[[-1,-1],[-1,-1]],[2,0]),
+	new page('You get away from the cliff.',[2,5,6],['Wander around','Get out of here','Find a sandwich'],[[-1,-1],[-1,-1],[0,0]],[0,0]),
+	new page('You leave the cliff. The end.',[],[],[],[0,0]),
+	new page('You find another sandwich.',[2,4],['Head to the cliff','Go back'],[[-1,-1],[-1,-1]],[1,0]),
+]
+function genText(id,writing){
+	construct = writing
+	construct+=texts[id].text
+	choices = []
+	for(a=0;a<texts[pageId].choice.length;a++){
+		if(texts[pageId].choiceConst[a][1] == constants[texts[pageId].choiceConst[a][0]]||texts[pageId].choiceConst[a][0] == -1){
+			choices.push(a)
+		}
+	}
+	for(a=0;a<choices.length;a++){
+		construct+='\n'+choiceTexts[a]+': '+texts[id].choiceText[choices[a]]
+	}
+	construct+='\nChoice: '
+	return construct
+}
+function setup(){
+	createCanvas(900,600)
+	textAlign(LEFT,BOTTOM)
+}
+function keyPressed(){
+	if(inputting){
+		if(keyCode == ENTER){
+			inputting = false
+			choices = []
+			for(a=0;a<texts[pageId].choice.length;a++){
+				if(texts[pageId].choiceConst[a][1] == constants[texts[pageId].choiceConst[a][0]]||texts[pageId].choiceConst[a][0] == -1){
+					choices.push(a)
+				}
+			}
+			for(a=0;a<choices.length;a++){
+				if(choice.toString() == choiceTexts[a]){
+					pageId = texts[pageId].choice[choices[a]]
+					trigger = true
+					writing+='\n'
+					if(texts[pageId].effect[0] == 1){
+						constants[texts[pageId].effect[1]] = 1
+					}
+					if(texts[pageId].effect[0] == 2){
+						constants[texts[pageId].effect[1]] = 0
+					}
+				}
+			}
+			if(!trigger){
+				writing+='\nInvalid Command\nChoice: '
+			}
+			choice = ''
+		}
+		else if(keyCode == BACKSPACE){
+			if(choice.length>0){
+				choice = choice.substr(0,choice.length-1)
+				texting = texting.substr(0,texting.length-1)
+			}
+		}
+		else if(keyCode != SHIFT){
+			choice+=key
+			texting+=key
+		}
+	}
+}
+function draw(){
+	background(0)
+	fill(255)
+	textWrap(WORD)
+	textFont('monospace',20)
+	text(texting,50,550,800)
+	if(trigger){
+		writing = genText(pageId,writing)
+		trigger = false
+	}
+	if(writing.length>0){
+		if(writeTimer>0){
+			writeTimer--
+		}
+		else{
+			texting+=writing[0]
+			writing = writing.substr(1,writing.length)
+			writeTimer = 2
+		}
+	}
+	else{
+		inputting = true
+	}
+}
